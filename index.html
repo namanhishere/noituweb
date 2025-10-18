@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <title>Wordlist</title>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</head>
+<body>
+
+<div class="container text-center">
+  <h1>Wordlist</h1>
+  <p id="loading-stat">Đang tải</p> 
+</div>
+  
+<div class="container">
+    <h3></h3>
+    <input placeholder="Tra cứu" id="inputbox"class="form-control">
+    <button id="submit">Tra cứu</button>
+
+    <h3>Danh sách từ</h3>
+    <textarea class="form-control" id="listAllTu" rows="15" readonly></textarea>
+    <h3>Top 5 dễ nhất</h3>
+    <textarea class="form-control" id="listEz" rows="5" readonly></textarea>
+    <h3>Top 5 Khó nhất</h3>
+    <textarea class="form-control" id="listdiff" rows="5" readonly></textarea>
+</div>
+</body>
+
+<script>
+    class WordList {
+        constructor() {
+            this.words = new Set();
+        }
+
+        addWord(word) {
+            word = word.trim().toLowerCase();
+            if (word && word.split(" ").length === 2) {
+            this.words.add(word);
+            }
+        }
+        searchMatchFirstWord(phrase) {
+            const parts = phrase.trim().toLowerCase().split(" ");
+            if (!parts.length) return [];
+            const first = parts[0];
+            return Array.from(this.words).filter(w => w.startsWith(first + " "));
+        }
+
+        wordCount() { return this.words.size; }
+    }
+    // let data = fetch
+    (async() => {
+        let r = await fetch("/listword");
+        let t = await r.text();
+        // console.log(t);
+        let wl = new WordList()
+
+        t.split(/,|\r?\n/).forEach(w => wl.addWord(w));
+        document.getElementById("loading-stat").innerText = `Đã tải ${wl.wordCount()} từ`;
+
+
+        document.getElementById("submit").addEventListener("click", () => {
+            const query = document.getElementById("inputbox").value.trim();
+            if (!query) return;
+
+            const lit = wl.searchMatchFirstWord(query);
+            const litAd = lit.map(x => [x, wl.searchMatchFirstWord(x.split(" ")[1])]);
+            litAd.sort((a, b) => b[1].length - a[1].length);
+
+            document.getElementById("listAllTu").value = `Tìm thấy ${litAd.length} từ\n------\n`+litAd.map(a => `${a[0]} | ${a[1].length} nối được '${a[0].split(" ")[1]}'`).join("\n")
+            const topEasy = litAd.slice(0, 5)
+                .map(a => `${a[0]} | ${a[1].length} nối được '${a[0].split(" ")[1]}'`)
+                .join("\n");
+            const topHard = litAd.slice(-5)
+                .map(a => `${a[0]} | ${a[1].length} nối được '${a[0].split(" ")[1]}'`)
+                .join("\n");
+
+            document.getElementById("listEz").value = topEasy || "Không có kết quả";
+            document.getElementById("listdiff").value = topHard || "Không có kết quả";
+        });
+
+    })()
+    
+</script>
+</html>
