@@ -58,8 +58,7 @@
 
         t.split(/,|\r?\n/).forEach(w => wl.addWord(w));
         document.getElementById("loading-stat").innerText = `Đã tải ${wl.wordCount()} từ`;
-
-
+      
         document.getElementById("submit").addEventListener("click", () => {
             const query = document.getElementById("inputbox").value.trim();
             if (!query) return;
@@ -84,3 +83,4 @@
     
 </script>
 </html>
+
